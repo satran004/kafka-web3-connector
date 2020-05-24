@@ -1,6 +1,6 @@
 # Kafka Web3 Connector
 
-This connector reads blocks from a web3 json rpc compatible blockchain and pushes them to Kafka.
+This connector reads blocks from a web3 json rpc compatible blockchain (Example: Aion) and pushes them to Kafka.
 
 ## Build
 
