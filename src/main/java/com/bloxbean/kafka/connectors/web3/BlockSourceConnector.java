@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.bloxbean.web3.kafka_connector.Constants.VERSION;
+import static com.bloxbean.kafka.connectors.web3.Constants.VERSION;
 
 public class BlockSourceConnector extends SourceConnector {
     private BlockSourceConfig config;

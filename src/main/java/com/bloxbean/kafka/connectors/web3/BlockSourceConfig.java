@@ -5,7 +5,7 @@ import org.apache.kafka.common.config.ConfigDef;
 
 import java.util.Map;
 
-import static com.bloxbean.web3.kafka_connector.Constants.*;
+import static com.bloxbean.kafka.connectors.web3.Constants.*;
 
 public class BlockSourceConfig extends AbstractConfig {
 
@@ -23,8 +23,9 @@ public class BlockSourceConfig extends AbstractConfig {
        configDef.define(TOPIC, org.apache.kafka.common.config.ConfigDef.Type.STRING, "", org.apache.kafka.common.config.ConfigDef.Importance.HIGH, "Destination topic");
        configDef.define(START_BLOCK, ConfigDef.Type.LONG, 0, org.apache.kafka.common.config.ConfigDef.Importance.HIGH, "Start Block Number");
        configDef.define(BLOCK_TIME_IN_SEC, ConfigDef.Type.INT, 10, org.apache.kafka.common.config.ConfigDef.Importance.HIGH, "Block time in sec");
+       configDef.define(NO_BLOCKS_FOR_FINALITY, ConfigDef.Type.INT, 0, org.apache.kafka.common.config.ConfigDef.Importance.HIGH, "No of blocks to wait for finality");
 
-        return configDef;
+       return configDef;
     }
 
     public String getWeb3RpcUrl() {
@@ -43,4 +44,7 @@ public class BlockSourceConfig extends AbstractConfig {
         return getInt(BLOCK_TIME_IN_SEC);
     }
 
+    public int getNoBlocksForFinality() {
+        return getInt(NO_BLOCKS_FOR_FINALITY);
+    }
 }

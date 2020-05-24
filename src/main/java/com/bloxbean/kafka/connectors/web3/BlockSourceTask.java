@@ -3,7 +3,7 @@ package com.bloxbean.kafka.connectors.web3;
 import com.bloxbean.kafka.connectors.web3.client.Web3RpcClient;
 import com.bloxbean.kafka.connectors.web3.util.HexConverter;
 import com.bloxbean.kafka.connectors.web3.exception.Web3ConnectorException;
-import com.bloxbean.web3.kafka_connector.Constants;
+import com.bloxbean.kafka.connectors.web3.util.StringUtil;
 import kong.unirest.json.JSONObject;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
@@ -12,7 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static com.bloxbean.web3.kafka_connector.Constants.*;
+import static com.bloxbean.kafka.connectors.web3.Constants.LAST_FETCHED_BLOCK_NUMBER;
+import static com.bloxbean.kafka.connectors.web3.Constants.*;
 
 public class BlockSourceTask extends SourceTask {
     private static Logger logger = LoggerFactory.getLogger(BlockSourceTask.class);
@@ -53,6 +54,11 @@ public class BlockSourceTask extends SourceTask {
 
     public List<SourceRecord> poll() throws InterruptedException {
         try {
+            if(!canContinue(blockNumberOffset)) {//Wait. May be finality not reached.
+                Thread.sleep(newBlockWaitTime);
+                return Collections.EMPTY_LIST;
+            }
+
             JSONObject jsonObject = web3RpcClient.getBlockByNumber(String.valueOf(blockNumberOffset), true);
             if (jsonObject == null) {
                 logger.info("Unable to fetch blocks from blockchain. Let's wait for {} sec to get the new block : {}", newBlockWaitTime/1000, blockNumberOffset);
@@ -77,6 +83,28 @@ public class BlockSourceTask extends SourceTask {
         }
     }
 
+    private boolean canContinue(long blockNumber) {
+        int finalityBlocksNo = config.getNoBlocksForFinality();
+        if(finalityBlocksNo == 0) {
+            return true;
+        } else {
+            //Wait for finality blocks.
+            //Get latest block and see the difference
+            String latestBlockNumberStr = web3RpcClient.getLatestBlock();
+            if(StringUtil.isEmpty(latestBlockNumberStr)) {
+                logger.error("Unable to get latest block number");
+                return false;
+            } else {
+                long latestBlockNumber = Long.parseLong(latestBlockNumberStr);
+                if(finalityBlocksNo <= (latestBlockNumber - blockNumber)) {
+                    return true;
+                } else {
+                    logger.info("Wait for finality !!! BlockNumberOffset :{}, Latest Block# on chain: {}", blockNumberOffset, latestBlockNumber);
+                    return false;
+                }
+            }
+        }
+    }
 
     private SourceRecord generateSourceRecord(JSONObject blockJson, long blockNumberOffset, long timestamp) {
         return new SourceRecord(
