@@ -23,5 +23,6 @@ block_time=10
 2. Start the connector
 
    >cd ../kafka-web3-connector
+   
    >$KAFKA_HOME/bin/connect-standalone.sh config/connect-standalone.properties config/connector-web3-source.properties
      
