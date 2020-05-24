@@ -1,0 +1,42 @@
+###
+GET http://localhost:8083/connector-plugins
+
+###
+GET http://localhost:8083/connectors
+
+###
+POST http://localhost:8083/connectors
+Content-Type: application/json
+
+{
+  "name": "bloxbean-web3-source-connector",
+  "config": {
+    "connector.class": "com.bloxbean.kafka.connectors.web3.BlockSourceConnector",
+    "tasks.max": 1,
+    "web3_rpc_url": "http://<host>:<port>",
+    "topic": "aion-blocks",
+    "start_block": 6106646,
+    "block_time": 10
+  }
+}
+
+###
+GET http://localhost:8083/connectors/bloxbean-web3-source-connector
+
+###
+GET http://localhost:8083/connectors/bloxbean-web3-source-connector/status
+
+###
+POST http://localhost:8083/connectors/bloxbean-web3-source-connector/restart
+
+###
+PUT http://localhost:8083/connectors/bloxbean-web3-source-connector/pause
+
+###
+PUT http://localhost:8083/connectors/bloxbean-web3-source-connector/resume
+
+###
+DELETE http://localhost:8083/connectors/<connector_name>
+
+###
+
