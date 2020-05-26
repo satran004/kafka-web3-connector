@@ -80,7 +80,6 @@ public class EventsSourceTask extends SourceTask {
             if (eventArrayJson == null || eventArrayJson.length() == 0) {
                 SourceRecord sourceRecord = generateDummyEntry(blockNumberOffset, timestamp);
                 blockNumberOffset++;
-//                return Collections.EMPTY_LIST;
                 return Arrays.asList(sourceRecord);
             }
 
