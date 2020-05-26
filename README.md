@@ -31,7 +31,7 @@ block_time=10
      
 ## Running the Event Logs Source connector
 
-1. Block Source Connector properties
+1. Event Logs Source Connector properties
 
 ```$xslt
 name=bloxbean-web3-events-source-connector
