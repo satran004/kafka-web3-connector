@@ -11,7 +11,7 @@ Content-Type: application/json
 {
   "name": "bloxbean-web3-source-connector-latest-blocks",
   "config": {
-    "connector.class": "com.bloxbean.kafka.connectors.web3.BlockSourceConnector",
+    "connector.class": "com.bloxbean.kafka.connectors.web3.blocks.BlockSourceConnector",
     "tasks.max": 1,
     "web3_rpc_url": "http://<host>:8545",
     "topic": "aion-latest-blocks",
@@ -29,7 +29,7 @@ Content-Type: application/json
 {
   "name": "bloxbean-web3-source-connector",
   "config": {
-    "connector.class": "com.bloxbean.kafka.connectors.web3.BlockSourceConnector",
+    "connector.class": "com.bloxbean.kafka.connectors.web3.blocks.BlockSourceConnector",
     "tasks.max": 1,
     "web3_rpc_url": "http://<host>:8545",
     "topic": "aion-blocks",
@@ -59,3 +59,21 @@ DELETE http://localhost:8083/connectors/<connector_name>
 
 ###
 
+
+###
+# Create a new connector instance with finality blocks setting.
+POST http://localhost:8083/connectors
+Content-Type: application/json
+
+{
+  "name": "bloxbean-web3-source-connector",
+  "config": {
+    "connector.class": "com.bloxbean.kafka.connectors.web3.events.EventsSourceConnector",
+    "tasks.max": 1,
+    "web3_rpc_url": "http://<host>:8545",
+    "topic": "aion-blocks",
+    "start_block": 0,
+    "block_time": 10,
+    "no_of_blocks_for_finality": 30
+  }
+}

@@ -1,6 +1,7 @@
 package com.bloxbean.web3.kafka_connector.util;
 
-import jdk.nashorn.internal.ir.annotations.Ignore;
+import com.bloxbean.kafka.connectors.web3.client.Web3RpcClient;
+import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.Test;
@@ -26,5 +27,10 @@ class Web3RpcClientTest {
 
     @Test
     void getLogs() {
+//        long blockNumber = 0L;
+//        Web3RpcClient web3RpcClient = new Web3RpcClient("http://localhost:8545");
+//        JSONArray jsonArray = web3RpcClient.getLogs("6117319", "6117350", null, null, null);
+//
+//        System.out.println(jsonArray);
     }
 }

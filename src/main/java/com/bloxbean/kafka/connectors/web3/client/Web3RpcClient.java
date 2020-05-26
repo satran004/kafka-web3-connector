@@ -64,10 +64,8 @@ public class Web3RpcClient {
         }
     }
 
-    public String getLogs(String fromBlock, String toBlock, String addresses, String topics, String blockHash) {
+    public JSONArray getLogs(String fromBlock, String toBlock, String addresses, String topics, String blockHash) {
         try {
-            log.info("Getting logs");
-
             JSONObject jo = getJsonHeader("eth_getLogs");
             List<JSONObject> params = new ArrayList();
 
@@ -111,7 +109,8 @@ public class Web3RpcClient {
 
             jo.put("params", params);
 
-            log.info("Web3Rpc request data: \n" + jo.toString(2));
+            if(log.isDebugEnabled())
+                log.debug("Web3Rpc request data: \n" + jo.toString(2));
 
             HttpResponse<JsonNode> jsonResponse = getHttpRequest()
                     .body(jo)
@@ -122,14 +121,15 @@ public class Web3RpcClient {
             if (jsonNode == null)
                 return null;
 
-            log.info("Response from Aion kernel: \n" + jsonNode.getObject().toString(2));
+            if(log.isDebugEnabled())
+                log.debug("Response from Aion kernel: \n" + jsonNode.getObject().toString(2));
 
             JSONObject jsonObject = jsonNode.getObject();
 
             String error = getError(jsonObject);
 
             if (error == null) {
-                return jsonObject.toString();
+                return jsonObject.getJSONArray("result");
             } else {
                 throw new Web3Exception("getLogs() failed. Reason: " + error);
             }

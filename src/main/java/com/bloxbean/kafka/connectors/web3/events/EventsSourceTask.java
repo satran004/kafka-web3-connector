@@ -1,9 +1,12 @@
-package com.bloxbean.kafka.connectors.web3;
+package com.bloxbean.kafka.connectors.web3.events;
 
 import com.bloxbean.kafka.connectors.web3.client.Web3RpcClient;
-import com.bloxbean.kafka.connectors.web3.util.HexConverter;
 import com.bloxbean.kafka.connectors.web3.exception.Web3ConnectorException;
+import com.bloxbean.kafka.connectors.web3.util.ConfigConstants;
+import com.bloxbean.kafka.connectors.web3.util.HexConverter;
 import com.bloxbean.kafka.connectors.web3.util.StringUtil;
+import kong.unirest.json.JSONArray;
+import kong.unirest.json.JSONException;
 import kong.unirest.json.JSONObject;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
@@ -12,25 +15,25 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static com.bloxbean.kafka.connectors.web3.Constants.LAST_FETCHED_BLOCK_NUMBER;
-import static com.bloxbean.kafka.connectors.web3.Constants.*;
+import static com.bloxbean.kafka.connectors.web3.util.ConfigConstants.LAST_FETCHED_BLOCK_NUMBER;
+import static com.bloxbean.kafka.connectors.web3.util.ConfigConstants.WEB3_RPC_URL;
 
-public class BlockSourceTask extends SourceTask {
-    private static Logger logger = LoggerFactory.getLogger(BlockSourceTask.class);
+public class EventsSourceTask extends SourceTask {
+    private static Logger logger = LoggerFactory.getLogger(EventsSourceTask.class);
 
-    private BlockSourceConfig config;
+    private EventsSourceConfig config;
     private Web3RpcClient web3RpcClient;
 
     private long newBlockWaitTime = 0;
     private long blockNumberOffset;
 
     public String version() {
-        return Constants.VERSION;
+        return ConfigConstants.VERSION;
     }
 
     public void start(Map<String, String> map) {
         //Find last offset or blocknumber
-        config = new BlockSourceConfig(map);
+        config = new EventsSourceConfig(map);
         initializeLastVariables();
         web3RpcClient = new Web3RpcClient(config.getWeb3RpcUrl());
     }
@@ -59,20 +62,35 @@ public class BlockSourceTask extends SourceTask {
                 return Collections.EMPTY_LIST;
             }
 
-            JSONObject jsonObject = web3RpcClient.getBlockByNumber(String.valueOf(blockNumberOffset), true);
-            if (jsonObject == null) {
+            //Check if latest block is available. This is required to read the timestamp
+            JSONObject blockJson = web3RpcClient.getBlockByNumber(String.valueOf(blockNumberOffset), false);
+            if (blockJson == null) {
                 logger.info("Unable to fetch blocks from blockchain. Let's wait for {} sec to get the new block : {}", newBlockWaitTime/1000, blockNumberOffset);
                 Thread.sleep(newBlockWaitTime);
                 return Collections.EMPTY_LIST;
             }
 
+            logger.info("Scanned Block {} : ", blockNumberOffset);
+
+            String from = String.valueOf(blockNumberOffset);
+            String to = String.valueOf(blockNumberOffset);
+            JSONArray eventArrayJson = web3RpcClient.getLogs(from, to, config.getEventLogsFilterAddresses(), config.getEventLogsFilterTopics(), null);
+
+            long timestamp = HexConverter.hexToTimestampInMillis(blockJson.getString("timestamp"));
+            if (eventArrayJson == null || eventArrayJson.length() == 0) {
+                SourceRecord sourceRecord = generateDummyEntry(blockNumberOffset, timestamp);
+                blockNumberOffset++;
+//                return Collections.EMPTY_LIST;
+                return Arrays.asList(sourceRecord);
+            }
+
             List<SourceRecord> sourceRecords = new ArrayList<>();
-
-            long timestamp = HexConverter.hexToTimestampInMillis(jsonObject.getString("timestamp"));
-            SourceRecord sourceRecord = generateSourceRecord(jsonObject, blockNumberOffset, timestamp);
-            sourceRecords.add(sourceRecord);
-
-            logger.info("Successfully fetched block : {} ", jsonObject.getString("number"));
+            List<String> kafkaKeyNames = config.getEventLogsKafkaKeys();
+            for(int i=0; i< eventArrayJson.length(); i++) {
+                SourceRecord sourceRecord = generateSourceRecord(kafkaKeyNames, eventArrayJson.getJSONObject(i), blockNumberOffset, timestamp);
+                sourceRecords.add(sourceRecord);
+            }
+            logger.info("# of events found {}", sourceRecords.size());
 
             blockNumberOffset++;
 
@@ -106,18 +124,65 @@ public class BlockSourceTask extends SourceTask {
         }
     }
 
-    private SourceRecord generateSourceRecord(JSONObject blockJson, long blockNumberOffset, long timestamp) {
+    private SourceRecord generateDummyEntry(long blockNumberOffset, long timestamp) {
+        return new SourceRecord(
+                sourcePartition(),
+                sourceOffset(blockNumberOffset),
+                config.getTopic() + "-dummy-for-offset",
+                null, // partition will be inferred by the framework
+                null,
+                blockNumberOffset,
+                null,
+                blockNumberOffset,
+                timestamp
+        );
+    }
+
+
+    private SourceRecord generateSourceRecord(List<String> kafkaKeys, JSONObject eventJson, long blockNumberOffset, long timestamp) {
+        String key = buildKeys(eventJson, kafkaKeys);
+        logger.info("Event key : {}", key);
+
         return new SourceRecord(
                 sourcePartition(),
                 sourceOffset(blockNumberOffset),
                 config.getTopic(),
                 null, // partition will be inferred by the framework
                 null,
-                String.valueOf(blockNumberOffset),
+                key,
                 null,
-                blockJson.toString(),
+                eventJson.toString(),
                 timestamp
-                );
+        );
+    }
+
+    private String buildKeys(JSONObject eventJson, List<String> kafkaKeys) {
+        if(eventJson == null)
+            return null;
+
+        if(kafkaKeys == null || kafkaKeys.isEmpty())
+            return null;
+
+        StringBuilder sb = new StringBuilder();
+        for(String keyName: kafkaKeys) {
+
+            try {
+                if("topic".equals(keyName)) {
+                    String val = eventJson.getJSONArray("topics").getString(0);
+                    sb.append(val);
+                } else {
+                    String val = eventJson.getString(keyName);
+                    sb.append(val);
+                }
+                sb.append(",");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        if(sb != null && sb.length() > 0 && sb.charAt(sb.length()-1) == ',')
+            sb.deleteCharAt(sb.length()-1);
+
+        return sb.toString();
     }
 
     private Map<String, String> sourcePartition() {

@@ -1,11 +1,11 @@
-package com.bloxbean.kafka.connectors.web3;
+package com.bloxbean.kafka.connectors.web3.blocks;
 
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
 
 import java.util.Map;
 
-import static com.bloxbean.kafka.connectors.web3.Constants.*;
+import static com.bloxbean.kafka.connectors.web3.util.ConfigConstants.*;
 
 public class BlockSourceConfig extends AbstractConfig {
 
