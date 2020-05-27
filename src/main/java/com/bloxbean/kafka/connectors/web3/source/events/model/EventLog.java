@@ -1,7 +1,4 @@
-package com.bloxbean.kafka.connectors.web3.events.model;
-
-import kong.unirest.json.JSONArray;
-import kong.unirest.json.JSONObject;
+package com.bloxbean.kafka.connectors.web3.source.events.model;
 
 import java.util.List;
 

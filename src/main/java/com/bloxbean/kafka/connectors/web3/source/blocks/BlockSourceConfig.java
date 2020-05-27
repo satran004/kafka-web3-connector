@@ -1,4 +1,4 @@
-package com.bloxbean.kafka.connectors.web3.blocks;
+package com.bloxbean.kafka.connectors.web3.source.blocks;
 
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;

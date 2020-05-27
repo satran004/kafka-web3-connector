@@ -11,7 +11,7 @@ Content-Type: application/json
 {
   "name": "bloxbean-web3-source-connector-latest-blocks",
   "config": {
-    "connector.class": "com.bloxbean.kafka.connectors.web3.blocks.BlockSourceConnector",
+    "connector.class": "com.bloxbean.kafka.connectors.web3.source.blocks.BlockSourceConnector",
     "tasks.max": 1,
     "web3_rpc_url": "http://<host>:8545",
     "topic": "aion-latest-blocks",
@@ -29,7 +29,7 @@ Content-Type: application/json
 {
   "name": "bloxbean-web3-source-connector",
   "config": {
-    "connector.class": "com.bloxbean.kafka.connectors.web3.blocks.BlockSourceConnector",
+    "connector.class": "com.bloxbean.kafka.connectors.web3.source.blocks.BlockSourceConnector",
     "tasks.max": 1,
     "web3_rpc_url": "http://<host>:8545",
     "topic": "aion-blocks",
@@ -68,7 +68,7 @@ Content-Type: application/json
 {
   "name": "bloxbean-web3-events-connector",
   "config": {
-    "connector.class": "com.bloxbean.kafka.connectors.web3.events.EventsSourceConnector",
+    "connector.class": "com.bloxbean.kafka.connectors.web3.source.events.EventSourceConnector",
     "tasks.max": 1,
     "web3_rpc_url": "http://<host>:8545",
     "topic": "aion-blocks",

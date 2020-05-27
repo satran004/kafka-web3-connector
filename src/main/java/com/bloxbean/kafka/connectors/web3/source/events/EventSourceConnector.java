@@ -1,4 +1,4 @@
-package com.bloxbean.kafka.connectors.web3.blocks;
+package com.bloxbean.kafka.connectors.web3.source.events;
 
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.connector.Task;
@@ -10,17 +10,17 @@ import java.util.Map;
 
 import static com.bloxbean.kafka.connectors.web3.util.ConfigConstants.VERSION;
 
-public class BlockSourceConnector extends SourceConnector {
-    private BlockSourceConfig config;
+public class EventSourceConnector extends SourceConnector {
+    private EventSourceConfig config;
 
     @Override
     public void start(Map<String, String> props) {
-        config = new BlockSourceConfig(props);
+        config = new EventSourceConfig(props);
     }
 
     @Override
     public Class<? extends Task> taskClass() {
-        return BlockSourceTask.class;
+        return EventSourceTask.class;
     }
 
     @Override
@@ -39,7 +39,7 @@ public class BlockSourceConnector extends SourceConnector {
 
     @Override
     public ConfigDef config() {
-        return BlockSourceConfig.conf();
+        return EventSourceConfig.conf();
     }
 
     @Override

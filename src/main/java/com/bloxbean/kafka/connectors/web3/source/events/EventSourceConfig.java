@@ -1,4 +1,4 @@
-package com.bloxbean.kafka.connectors.web3.events;
+package com.bloxbean.kafka.connectors.web3.source.events;
 
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
@@ -10,14 +10,14 @@ import java.util.Map;
 import static com.bloxbean.kafka.connectors.web3.util.ConfigConstants.*;
 import static com.bloxbean.kafka.connectors.web3.util.ConfigConstants.NO_BLOCKS_FOR_FINALITY;
 
-public class EventsSourceConfig extends AbstractConfig {
+public class EventSourceConfig extends AbstractConfig {
     private final static List<String> DEFAULT_KAFKA_KEYS = Arrays.asList("transactionHash","logIndex");
 
-    public EventsSourceConfig(ConfigDef config, Map<String, String> parsedConfig) {
+    public EventSourceConfig(ConfigDef config, Map<String, String> parsedConfig) {
         super(config, parsedConfig);
     }
 
-    public EventsSourceConfig(Map<String, String> parsedConfig) {
+    public EventSourceConfig(Map<String, String> parsedConfig) {
         super(conf(), parsedConfig);
     }
 

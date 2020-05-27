@@ -3,8 +3,8 @@
 This connector reads blocks or events from a web3 json rpc compatible blockchain (Example: Aion) and pushes them to Kafka.
 
 There are two available source connectors
-1. **Block Source Connector :** com.bloxbean.kafka.connectors.web3.blocks.BlockSourceConnector
-2. **Event Logs Connector :** com.bloxbean.kafka.connectors.web3.events.EventsSourceConnector
+1. **Block Source Connector :** com.bloxbean.kafka.connectors.web3.source.blocks.BlockSourceConnector
+2. **Event Logs Connector :** com.bloxbean.kafka.connectors.web3.source.events.EventSourceConnector
 ## Build
 
     >mvn clean package
@@ -15,7 +15,7 @@ There are two available source connectors
 
 ```$xslt
 name=bloxbean-web3-source-connector
-connector.class=com.bloxbean.kafka.connectors.web3.blocks.BlockSourceConnector
+connector.class=com.bloxbean.kafka.connectors.web3.source.blocks.BlockSourceConnector
 tasks.max=1
 web3_rpc_url=http://<web3_rpc_host>:<port>
 topic=web3-connect-test
@@ -35,7 +35,7 @@ block_time=10
 
 ```$xslt
 name=bloxbean-web3-events-source-connector
-connector.class=com.bloxbean.kafka.connectors.web3.events.EventsSourceConnector
+connector.class=com.bloxbean.kafka.connectors.web3.source.events.EventSourceConnector
 tasks.max=1
 web3_rpc_url=http://192.168.0.96:8545
 topic=web3-events
