@@ -61,12 +61,12 @@ DELETE http://localhost:8083/connectors/<connector_name>
 
 
 ###
-# Create a new connector instance with finality blocks setting.
+# Create a new connector instance with finality events setting.
 POST http://localhost:8083/connectors
 Content-Type: application/json
 
 {
-  "name": "bloxbean-web3-source-connector",
+  "name": "bloxbean-web3-events-connector",
   "config": {
     "connector.class": "com.bloxbean.kafka.connectors.web3.events.EventsSourceConnector",
     "tasks.max": 1,
@@ -74,6 +74,6 @@ Content-Type: application/json
     "topic": "aion-blocks",
     "start_block": 0,
     "block_time": 10,
-    "no_of_blocks_for_finality": 30
+    "no_of_blocks_for_finality": 0
   }
 }
