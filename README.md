@@ -1,3 +1,5 @@
+![Java CI with Maven](https://github.com/satran004/kafka-web3-connector/workflows/Java%20CI%20with%20Maven/badge.svg)
+
 # Kafka Web3 Connector
 
 This connector reads blocks or events from a web3 json rpc compatible blockchain (Example: Aion) and pushes them to Kafka.
