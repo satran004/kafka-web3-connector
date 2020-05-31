@@ -15,6 +15,9 @@ Content-Type: application/json
     "tasks.max": 1,
     "web3_rpc_url": "http://<host>:8545",
     "topic": "aion-latest-blocks",
+    "transaction_topic": "aion-transactions",
+    "ignore_block_fields": "logsBloom,extraData",
+    "ignore_transaction_fields": "input",
     "start_block": 0,
     "block_time": 10,
     "no_of_blocks_for_finality": 0

@@ -1,12 +1,17 @@
 package com.bloxbean.kafka.connectors.web3.source.blocks;
 
 import com.bloxbean.kafka.connectors.web3.exception.Web3Exception;
+import com.bloxbean.kafka.connectors.web3.source.blocks.schema.BlockConverter;
+import com.bloxbean.kafka.connectors.web3.source.blocks.schema.BlockSchema;
+import com.bloxbean.kafka.connectors.web3.source.blocks.schema.ParsedBlockStruct;
+import com.bloxbean.kafka.connectors.web3.source.blocks.schema.TransactionSchema;
 import com.bloxbean.kafka.connectors.web3.util.ConfigConstants;
 import com.bloxbean.kafka.connectors.web3.client.Web3RpcClient;
 import com.bloxbean.kafka.connectors.web3.util.HexConverter;
 import com.bloxbean.kafka.connectors.web3.exception.Web3ConnectorException;
 import com.bloxbean.kafka.connectors.web3.util.StringUtil;
 import kong.unirest.json.JSONObject;
+import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
 import org.slf4j.Logger;
@@ -29,6 +34,11 @@ public class BlockSourceTask extends SourceTask {
     private long blockNumberOffset;
 
     private int retryCounter;
+
+    private BlockConverter blockConverter =  new BlockConverter();
+    //keep it here. so no need to create a HashSet always
+    private Set<String> ignoredBlockFields;
+    private Set<String> ignoreTransactionFields;
 
     public String version() {
         return ConfigConstants.VERSION;
@@ -56,6 +66,8 @@ public class BlockSourceTask extends SourceTask {
                 throw new Web3ConnectorException(String.format("Invalid last fetched block number : %s", lastFetchedBlockNumber));
         }
         newBlockWaitTime = config.getBlockTime() * 1000;
+        ignoredBlockFields = config.getIgnoreBlockFields();
+        ignoreTransactionFields = config.getIgnoreTransactionFields();
     }
 
     public List<SourceRecord> poll() throws InterruptedException {
@@ -72,11 +84,8 @@ public class BlockSourceTask extends SourceTask {
                 return Collections.EMPTY_LIST;
             }
 
-            List<SourceRecord> sourceRecords = new ArrayList<>();
-
             long timestamp = HexConverter.hexToTimestampInMillis(jsonObject.getString("timestamp"));
-            SourceRecord sourceRecord = generateSourceRecord(jsonObject, blockNumberOffset, timestamp);
-            sourceRecords.add(sourceRecord);
+            List<SourceRecord> sourceRecords = generateSourceRecords(jsonObject, blockNumberOffset, timestamp);
 
             logger.info("Successfully fetched block : {} ", jsonObject.getString("number"));
 
@@ -124,18 +133,43 @@ public class BlockSourceTask extends SourceTask {
         }
     }
 
-    private SourceRecord generateSourceRecord(JSONObject blockJson, long blockNumberOffset, long timestamp) {
-        return new SourceRecord(
+    private List<SourceRecord> generateSourceRecords(JSONObject blockJson, long blockNumberOffset, long timestamp) {
+
+        ParsedBlockStruct blockStruct = blockConverter.convertFromJSON(blockJson, config.isSeparateTransactionTopic(), ignoredBlockFields, ignoreTransactionFields);
+        List<SourceRecord> sourceRecords = new ArrayList();
+
+        SourceRecord blockRecord = new SourceRecord(
                 sourcePartition(),
                 sourceOffset(blockNumberOffset),
                 config.getTopic(),
                 null, // partition will be inferred by the framework
                 null,
                 String.valueOf(blockNumberOffset),
-                null,
-                blockJson.toString(),
+                BlockSchema.SCHEMA,
+                blockStruct.getBlock(),
                 timestamp
                 );
+        sourceRecords.add(blockRecord);
+
+        if (config.isSeparateTransactionTopic() && blockStruct.getTransactions() != null && blockStruct.getTransactions().size() > 0) {
+            List<Struct> transactions = blockStruct.getTransactions();
+            for(Struct transaction: transactions) {
+                SourceRecord transactionRecord = new SourceRecord(
+                        sourcePartition(),
+                        sourceOffset(blockNumberOffset),
+                        config.getTrasactionTopic(),
+                        null, // partition will be inferred by the framework
+                        null,
+                        String.valueOf(transaction.getString(TransactionSchema.HASH)),
+                        TransactionSchema.SCHEMA,
+                        transaction,
+                        timestamp
+                );
+                sourceRecords.add(transactionRecord);
+            }
+        }
+
+        return sourceRecords;
     }
 
     private Map<String, String> sourcePartition() {

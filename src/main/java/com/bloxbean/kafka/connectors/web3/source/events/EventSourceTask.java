@@ -3,12 +3,15 @@ package com.bloxbean.kafka.connectors.web3.source.events;
 import com.bloxbean.kafka.connectors.web3.client.Web3RpcClient;
 import com.bloxbean.kafka.connectors.web3.exception.Web3ConnectorException;
 import com.bloxbean.kafka.connectors.web3.exception.Web3Exception;
+import com.bloxbean.kafka.connectors.web3.source.events.schema.EventConverter;
+import com.bloxbean.kafka.connectors.web3.source.events.schema.EventSchema;
 import com.bloxbean.kafka.connectors.web3.util.ConfigConstants;
 import com.bloxbean.kafka.connectors.web3.util.HexConverter;
 import com.bloxbean.kafka.connectors.web3.util.StringUtil;
 import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONException;
 import kong.unirest.json.JSONObject;
+import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
 import org.slf4j.Logger;
@@ -31,6 +34,7 @@ public class EventSourceTask extends SourceTask {
     private long blockNumberOffset;
 
     private int retryCounter;
+    private EventConverter eventConverter = new EventConverter();
 
     public String version() {
         return ConfigConstants.VERSION;
@@ -155,7 +159,7 @@ public class EventSourceTask extends SourceTask {
 
 
     private SourceRecord generateSourceRecord(List<String> kafkaKeys, JSONObject eventJson, long blockNumberOffset, long timestamp) {
-        String key = buildKeys(eventJson, kafkaKeys);
+        Struct key = buildKeys(eventJson, kafkaKeys);
         logger.info("Event key : {}", key);
 
         return new SourceRecord(
@@ -163,41 +167,37 @@ public class EventSourceTask extends SourceTask {
                 sourceOffset(blockNumberOffset),
                 config.getTopic(),
                 null, // partition will be inferred by the framework
-                null,
+                EventSchema.KEY_SCHEMA,
                 key,
-                null,
-                eventJson.toString(),
+                EventSchema.SCHEMA,
+                eventConverter.convertFromJSON(eventJson),
                 timestamp
         );
     }
 
-    private String buildKeys(JSONObject eventJson, List<String> kafkaKeys) {
-        if(eventJson == null)
+    private Struct buildKeys(JSONObject eventJson, List<String> kafkaKeys) {
+        if (eventJson == null)
             return null;
 
-        if(kafkaKeys == null || kafkaKeys.isEmpty())
+        if (kafkaKeys == null || kafkaKeys.isEmpty())
             return null;
 
-        StringBuilder sb = new StringBuilder();
-        for(String keyName: kafkaKeys) {
-
+        Struct keyStruct = new Struct(EventSchema.KEY_SCHEMA);
+        for (String keyName : kafkaKeys) {
             try {
-                if("topic".equals(keyName)) {
+                if ("topic".equals(keyName)) {
                     String val = eventJson.getJSONArray("topics").getString(0);
-                    sb.append(val);
+                    keyStruct.put("topic", val);
                 } else {
                     String val = eventJson.getString(keyName);
-                    sb.append(val);
+                    keyStruct.put(keyName, val);
                 }
-                sb.append(",");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-        if(sb != null && sb.length() > 0 && sb.charAt(sb.length()-1) == ',')
-            sb.deleteCharAt(sb.length()-1);
 
-        return sb.toString();
+        return keyStruct;
     }
 
     private Map<String, String> sourcePartition() {

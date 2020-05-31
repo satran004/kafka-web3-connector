@@ -21,6 +21,12 @@ connector.class=com.bloxbean.kafka.connectors.web3.source.blocks.BlockSourceConn
 tasks.max=1
 web3_rpc_url=http://<web3_rpc_host>:<port>
 topic=web3-connect-test
+#To publish transactions to a separate topic, uncomment the following line
+#transaction_topic=aion-transactions
+#Comma separated list of ignored fields from Block object.
+#ignore_block_fields=logsBloom,extraData
+#Comma separated ist of ignored field from Transaction object. Supported options: input
+#ignore_transaction_fields=input
 start_block=6106120
 block_time=10
 ```
@@ -39,7 +45,7 @@ block_time=10
 name=bloxbean-web3-events-source-connector
 connector.class=com.bloxbean.kafka.connectors.web3.source.events.EventSourceConnector
 tasks.max=1
-web3_rpc_url=http://192.168.0.96:8545
+web3_rpc_url=http://<web3_rpc_host>:<port>
 topic=web3-events
 start_block=6117319
 block_time=10
