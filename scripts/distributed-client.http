@@ -74,7 +74,7 @@ Content-Type: application/json
     "connector.class": "com.bloxbean.kafka.connectors.web3.source.events.EventSourceConnector",
     "tasks.max": 1,
     "web3_rpc_url": "http://<host>:8545",
-    "topic": "aion-blocks",
+    "topic": "aion-events",
     "start_block": 0,
     "block_time": 10,
     "no_of_blocks_for_finality": 0
