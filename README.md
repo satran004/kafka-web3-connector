@@ -1,6 +1,6 @@
 # Kafka Web3 Connector
 
-This connector reads blocks or events from a web3 json rpc compatible blockchain (Example: Aion) and pushes them to Kafka.
+This connector reads blocks or events from a web3 json rpc compatible blockchain (Example: Aion, Ethereum) and pushes them to Kafka.
 
 There are two available source connectors
 1. **Block Source Connector :** com.bloxbean.kafka.connectors.web3.source.blocks.BlockSourceConnector
