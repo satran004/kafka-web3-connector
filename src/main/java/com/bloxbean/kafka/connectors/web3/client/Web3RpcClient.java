@@ -21,14 +21,20 @@ public class Web3RpcClient {
         this.web3RpcUrl = web3RpcUrl;
     }
 
-    public JSONObject getBlockByNumber(String blockNumber, boolean fullTxnObject) {
+    public JSONObject getBlockByNumber(Long blockNumber, boolean fullTxnObject) {
         try {
             JSONObject jo = getJsonHeader("eth_getBlockByNumber");
 
-            List<String> params = new ArrayList<>();
-            params.add(blockNumber);
-            params.add(Boolean.toString(fullTxnObject));
+            String blockNumberHex = longToHex(blockNumber);
+
+            List<Object> params = new ArrayList<>();
+            params.add(blockNumberHex);
+            params.add(Boolean.valueOf(fullTxnObject));
             jo.put("params", params);
+
+            if(log.isDebugEnabled()) {
+                log.debug("Request: \n" + jo);
+            }
 
             HttpResponse<JsonNode> jsonResponse = getHttpRequest()
                     .body(jo)
@@ -64,12 +70,15 @@ public class Web3RpcClient {
         }
     }
 
-    public JSONArray getLogs(String fromBlock, String toBlock, String addresses, String topics, String blockHash) {
+    public JSONArray getLogs(Long fromBlockNumber, Long toBlockNumber, String addresses, String topics, String blockHash) {
         try {
             JSONObject jo = getJsonHeader("eth_getLogs");
             List<JSONObject> params = new ArrayList();
 
             JSONObject filters = new JSONObject();
+
+            String fromBlock = longToHex(fromBlockNumber);
+            String toBlock = longToHex(toBlockNumber);
 
             if (fromBlock != null && !fromBlock.trim().isEmpty())
                 filters.put("fromBlock", fromBlock);
@@ -137,6 +146,16 @@ public class Web3RpcClient {
         } catch (UnirestException e) {
             throw new Web3Exception("getLogs() failed", e);
         }
+    }
+
+    private String longToHex(Long value) {
+        if(value == null)
+            return null;
+
+        String blockNumberHex = Long.toHexString(value);
+        if(!blockNumberHex.startsWith("0x"))
+            blockNumberHex = "0x" + blockNumberHex;
+        return blockNumberHex;
     }
 
     private String getError(JSONObject jsonObject) {

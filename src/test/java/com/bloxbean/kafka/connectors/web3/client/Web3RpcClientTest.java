@@ -13,9 +13,9 @@ class Web3RpcClientTest {
 
     @Test
     void getBlockByNumber() {
-//        long blockNumber = 6139184;
-//        Web3RpcClient web3RpcClient = new Web3RpcClient("http://localhost:8545");
-//        JSONObject jsonObject = web3RpcClient.getBlockByNumber(String.valueOf(blockNumber), true);
+//        long blockNumber = 10244696;
+//        Web3RpcClient web3RpcClient = new Web3RpcClient("https://<host>");
+//        JSONObject jsonObject = web3RpcClient.getBlockByNumber(blockNumber, true);
 //
 //        System.out.println(jsonObject);
 //        System.out.println(jsonObject.getString("timestamp"));
@@ -26,7 +26,7 @@ class Web3RpcClientTest {
     void getLogs() {
 //        long blockNumber = 0L;
 //        Web3RpcClient web3RpcClient = new Web3RpcClient("http://localhost:8545");
-//        JSONArray jsonArray = web3RpcClient.getLogs("6117319", "6117350", null, null, null);
+//        JSONArray jsonArray = web3RpcClient.getLogs(6117319L, 6117350L, null, null, null);
 //
 //        System.out.println(jsonArray);
     }

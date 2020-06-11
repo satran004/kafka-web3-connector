@@ -72,7 +72,7 @@ public class EventSourceTask extends SourceTask {
             }
 
             //Check if latest block is available. This is required to read the timestamp
-            JSONObject blockJson = web3RpcClient.getBlockByNumber(String.valueOf(blockNumberOffset), false);
+            JSONObject blockJson = web3RpcClient.getBlockByNumber(blockNumberOffset, false);
             if (blockJson == null) {
                 logger.info("Unable to fetch blocks from blockchain. Let's wait for {} sec to get the new block : {}", newBlockWaitTime/1000, blockNumberOffset);
                 Thread.sleep(newBlockWaitTime);
@@ -81,9 +81,7 @@ public class EventSourceTask extends SourceTask {
 
             logger.info("Scanned Block {} : ", blockNumberOffset);
 
-            String from = String.valueOf(blockNumberOffset);
-            String to = String.valueOf(blockNumberOffset);
-            JSONArray eventArrayJson = web3RpcClient.getLogs(from, to, config.getEventLogsFilterAddresses(), config.getEventLogsFilterTopics(), null);
+            JSONArray eventArrayJson = web3RpcClient.getLogs(blockNumberOffset, blockNumberOffset, config.getEventLogsFilterAddresses(), config.getEventLogsFilterTopics(), null);
 
             long timestamp = HexConverter.hexToTimestampInMillis(blockJson.getString("timestamp"));
             if (eventArrayJson == null || eventArrayJson.length() == 0) {

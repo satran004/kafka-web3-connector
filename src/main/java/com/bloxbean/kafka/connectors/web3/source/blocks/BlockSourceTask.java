@@ -5,11 +5,9 @@ import com.bloxbean.kafka.connectors.web3.source.blocks.schema.BlockConverter;
 import com.bloxbean.kafka.connectors.web3.source.blocks.schema.BlockSchema;
 import com.bloxbean.kafka.connectors.web3.source.blocks.schema.ParsedBlockStruct;
 import com.bloxbean.kafka.connectors.web3.source.blocks.schema.TransactionSchema;
-import com.bloxbean.kafka.connectors.web3.util.ConfigConstants;
+import com.bloxbean.kafka.connectors.web3.util.*;
 import com.bloxbean.kafka.connectors.web3.client.Web3RpcClient;
-import com.bloxbean.kafka.connectors.web3.util.HexConverter;
 import com.bloxbean.kafka.connectors.web3.exception.Web3ConnectorException;
-import com.bloxbean.kafka.connectors.web3.util.StringUtil;
 import kong.unirest.json.JSONObject;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -17,6 +15,7 @@ import org.apache.kafka.connect.source.SourceTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.*;
 
 import static com.bloxbean.kafka.connectors.web3.util.ConfigConstants.LAST_FETCHED_BLOCK_NUMBER;
@@ -77,7 +76,7 @@ public class BlockSourceTask extends SourceTask {
                 return Collections.EMPTY_LIST;
             }
 
-            JSONObject jsonObject = web3RpcClient.getBlockByNumber(String.valueOf(blockNumberOffset), true);
+            JSONObject jsonObject = web3RpcClient.getBlockByNumber(blockNumberOffset, true);
             if (jsonObject == null) {
                 logger.info("Unable to fetch blocks from blockchain. Let's wait for {} sec to get the new block : {}", newBlockWaitTime/1000, blockNumberOffset);
                 Thread.sleep(newBlockWaitTime);
@@ -87,7 +86,12 @@ public class BlockSourceTask extends SourceTask {
             long timestamp = HexConverter.hexToTimestampInMillis(jsonObject.getString("timestamp"));
             List<SourceRecord> sourceRecords = generateSourceRecords(jsonObject, blockNumberOffset, timestamp);
 
-            logger.info("Successfully fetched block : {} ", jsonObject.getString("number"));
+            String blockNumber = jsonObject.getString("number");
+            if(blockNumber.startsWith("0x")) {
+                blockNumber = String.valueOf(Long.decode(blockNumber)); //Long value
+            }
+
+            logger.info("Successfully fetched block : {} ", blockNumber);
 
             blockNumberOffset++;
             retryCounter = 0;
